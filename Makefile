@@ -27,7 +27,7 @@ lint:
 	golint -set_exit_status $(ALL_PACKAGES)
 
 test: build-deps fmt vet build
-	ENVIRONMENT=test go test -race ./...
+	ENVIRONMENT=test go test -race $(ALL_PACKAGES)
 
 test-cover-html:
 	@echo "mode: count" > coverage-all.out

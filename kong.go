@@ -39,26 +39,28 @@ type upstream struct {
 }
 
 func (kc *kongClient) upstreams() ([]upstream, error) {
+	upstreams := []upstream{}
+
 	req, err := http.NewRequest(http.MethodGet, kc.kongAdminURL, nil)
 	if err != nil {
-		// handle it
+		return upstreams, err
 	}
 
 	resp, err := kc.httpClient.Do(req)
 	if err != nil {
-		// handle it
+		return upstreams, err
 	}
 
 	respBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		// handle it
+		return upstreams, err
 	}
 
 	upstreamResponse := &upstreamResponse{}
 
 	err = json.Unmarshal(respBytes, upstreamResponse)
 	if err != nil {
-		// handle it
+		return upstreams, err
 	}
 
 	return upstreamResponse.Data, nil
