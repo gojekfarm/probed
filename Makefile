@@ -5,13 +5,17 @@ ALL_PACKAGES=$(shell go list ./... | grep -v "vendor")
 
 setup:
 	mkdir -p $(GOPATH)/bin
+	go get -u github.com/golang/dep/cmd/dep
 	go get -u github.com/golang/lint/golint
+
+build-deps:
+	dep ensure
 
 compile:
 	mkdir -p out/
 	go build -race ./...
 
-build: compile fmt vet lint
+build: build-deps compile fmt vet lint
 
 fmt:
 	go fmt ./...
@@ -22,7 +26,7 @@ vet:
 lint:
 	golint -set_exit_status $(ALL_PACKAGES)
 
-test: fmt vet build
+test: build-deps fmt vet build
 	ENVIRONMENT=test go test -race ./...
 
 test-cover-html:
