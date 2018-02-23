@@ -77,7 +77,7 @@ func TestKongHealthCheckStartQueuesTargets(t *testing.T) {
 		return len(targetChan) == 4
 	}
 
-	successful := asyncwait.NewAsyncWait(100, 10).Check(predicate)
+	successful := asyncwait.NewAsyncWait(100, 5).Check(predicate)
 	require.True(t, successful)
 
 	targetMap := make(map[string]target)
@@ -168,7 +168,7 @@ func TestKongHealthCheckStartWhenFetchTargetFailsForAUpstream(t *testing.T) {
 		return len(targetChan) == 2
 	}
 
-	successful := asyncwait.NewAsyncWait(15, 5).Check(predicate)
+	successful := asyncwait.NewAsyncWait(15, 3).Check(predicate)
 	require.True(t, successful)
 
 	targetMap := make(map[string]target)
