@@ -14,9 +14,22 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/rShetty/asyncwait"
+  packages = ["."]
+  revision = "1e02703eb90e5a499701f1418dce08a48de1a2a1"
+
+[[projects]]
+  name = "github.com/stretchr/objx"
+  packages = ["."]
+  revision = "facf9a85c22f48d2f52f2380e4efce1768749a89"
+  version = "v0.1"
+
+[[projects]]
   name = "github.com/stretchr/testify"
   packages = [
     "assert",
+    "mock",
     "require"
   ]
   revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
@@ -25,6 +38,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "fec9dccae0a3e93bbf2fbb3ce89f12d42eb11ff22c31b9edba61edc14faa3ae8"
+  inputs-digest = "df890c93d465ed3a3c0cda6808814ad8d61ca43c6bc13b0e1a1bf50f6a82dbea"
   solver-name = "gps-cdcl"
   solver-version = 1

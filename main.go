@@ -24,6 +24,22 @@ func main() {
 		log.Fatalf("`kong` flag did not provide kong host")
 	}
 
+	kongClient := newKongClient(*kongHost, *kongAdminPort)
+	kongHealthCheckConfig := &kongHealthCheckConfig{
+		healthCheckPath:     *healthCheckPath,
+		healthCheckInterval: *healthCheckInterval,
+	}
+
+	//TODO: make size of the targetChan configurable
+	healthCheck := &kongHealthCheck{
+		client:                kongClient,
+		kongHealthCheckConfig: kongHealthCheckConfig,
+		targetChan:            make(chan target, 100),
+	}
+
+	healthCheck.start()
+	defer healthCheck.stop()
+
 	log.Printf("started kong-healthcheck for kong host: %s with interval: %s ms", *kongHost, *healthCheckInterval)
 	sig := <-sigChan
 	log.Printf("stopping kong-healthcheck, received os signal: %v", sig)

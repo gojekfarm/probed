@@ -8,6 +8,13 @@ import (
 	"net/http"
 )
 
+// KongClient is the interface to kong apis
+type KongClient interface {
+	upstreams() ([]upstream, error)
+	targetsFor(upstreamID string) ([]target, error)
+	setTargetWeightFor(upstreamID, targetID, weight string) error
+}
+
 type kongClient struct {
 	httpClient   *http.Client
 	kongAdminURL string
