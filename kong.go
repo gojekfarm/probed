@@ -1,21 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 )
-
-type kongHealthCheckConfig struct {
-	healthCheckPath     string
-	healthCheckInterval string
-}
-
-type kongHealthCheck struct {
-	client            kongClient
-	healthCheckConfig kongHealthCheckConfig
-}
 
 type kongClient struct {
 	httpClient   *http.Client
@@ -41,17 +32,7 @@ type upstream struct {
 func (kc *kongClient) upstreams() ([]upstream, error) {
 	upstreams := []upstream{}
 
-	req, err := http.NewRequest(http.MethodGet, kc.kongAdminURL, nil)
-	if err != nil {
-		return upstreams, err
-	}
-
-	resp, err := kc.httpClient.Do(req)
-	if err != nil {
-		return upstreams, err
-	}
-
-	respBytes, err := ioutil.ReadAll(resp.Body)
+	respBytes, err := kc.doRequest(http.MethodGet, "upstreams", nil)
 	if err != nil {
 		return upstreams, err
 	}
@@ -79,17 +60,7 @@ type targetResponse struct {
 func (kc *kongClient) targetsFor(upstreamID string) ([]target, error) {
 	targets := []target{}
 
-	req, err := http.NewRequest(http.MethodGet, kc.kongAdminURL, nil)
-	if err != nil {
-		return targets, err
-	}
-
-	resp, err := kc.httpClient.Do(req)
-	if err != nil {
-		return targets, err
-	}
-
-	respBytes, err := ioutil.ReadAll(resp.Body)
+	respBytes, err := kc.doRequest(http.MethodGet, fmt.Sprintf("upstreams/%s/targets", upstreamID), nil)
 	if err != nil {
 		return targets, err
 	}
@@ -102,4 +73,31 @@ func (kc *kongClient) targetsFor(upstreamID string) ([]target, error) {
 	}
 
 	return targetResponse.Data, nil
+}
+
+func (kc *kongClient) setTargetWeightFor(upstreamID, targetID, weight string) error {
+	return nil
+}
+
+func (kc *kongClient) doRequest(method, path string, body []byte) ([]byte, error) {
+	var respBytes []byte
+
+	req, err := http.NewRequest(method, fmt.Sprintf("%s/%s", kc.kongAdminURL, path), bytes.NewBuffer(body))
+	if err != nil {
+		return respBytes, err
+	}
+
+	response, err := kc.httpClient.Do(req)
+	if err != nil {
+		return respBytes, err
+	}
+
+	defer response.Body.Close()
+
+	respBytes, err = ioutil.ReadAll(response.Body)
+	if err != nil {
+		return respBytes, err
+	}
+
+	return respBytes, nil
 }

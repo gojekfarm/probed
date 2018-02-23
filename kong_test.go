@@ -97,3 +97,14 @@ func TestTargetsForFailureUnmarshal(t *testing.T) {
 	require.Error(t, err, "should have failed to get upstreams")
 	require.Equal(t, 0, len(upstreams))
 }
+
+func TestSetTargetWeightForSuccess(t *testing.T) {
+	httpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusCreated)
+	}))
+	defer httpServer.Close()
+
+	kclient := &kongClient{httpClient: &http.Client{}, kongAdminURL: httpServer.URL}
+	err := kclient.setTargetWeightFor("upstream1", "target1", "100")
+	require.NoError(t, err, "should not have failed to set target weight")
+}
