@@ -61,7 +61,8 @@ func (khc *kongHealthCheck) monitorHealthOfTargets(targetChan chan target) {
 func (khc *kongHealthCheck) fetchAndQueueTargetsFor(upstreamID string, targetChan chan target) {
 	targets, err := khc.client.targetsFor(upstreamID)
 	if err != nil {
-		//handle
+		log.Printf("failed to fetch targets for upstream %s: %s", upstreamID, err)
+		return
 	}
 
 	for _, target := range targets {

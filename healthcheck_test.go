@@ -115,3 +115,71 @@ func TestKongHealthCheckStartUpstreamFetchFail(t *testing.T) {
 
 	mockClient.AssertExpectations(t)
 }
+
+func TestKongHealthCheckStartWhenFetchTargetFailsForAUpstream(t *testing.T) {
+	targetChan := make(chan target, 100)
+	mockClient := new(mockKongClient)
+
+	availableUpstreams := []upstream{
+		{
+			ID:   "1",
+			Name: "upstream1",
+		},
+		{
+			ID:   "2",
+			Name: "upstream2",
+		},
+	}
+
+	upstream1Targets := []target{
+		{
+			ID:     "1.1",
+			URL:    "1.2.3.4:80",
+			Weight: "1",
+		},
+		{
+			ID:     "1.2",
+			URL:    "1.2.3.5:80",
+			Weight: "0",
+		},
+	}
+
+	actualTargets := map[string]target{
+		upstream1Targets[0].ID: upstream1Targets[0],
+		upstream1Targets[1].ID: upstream1Targets[1],
+	}
+
+	mockClient.On("upstreams").Return(availableUpstreams, nil)
+	mockClient.On("targetsFor", "1").Return(upstream1Targets, nil)
+	mockClient.On("targetsFor", "2").Return([]target{}, errors.New("failed to fetch targets"))
+
+	kongHealthCheckConfig := &kongHealthCheckConfig{
+		healthCheckPath:     "/ping",
+		healthCheckInterval: "8",
+	}
+
+	kongHealthCheck, err := newKongHealthCheck(targetChan, mockClient, kongHealthCheckConfig)
+	require.NoError(t, err, "should not have failed to intialize kong health check")
+
+	go kongHealthCheck.start()
+	defer kongHealthCheck.stop()
+
+	predicate := func() bool {
+		return len(targetChan) == 2
+	}
+
+	successful := asyncwait.NewAsyncWait(15, 5).Check(predicate)
+	require.True(t, successful)
+
+	targetMap := make(map[string]target)
+	for i := 0; i < 2; i++ {
+		target := <-targetChan
+		targetMap[target.ID] = target
+	}
+
+	for id, target := range targetMap {
+		assert.Equal(t, actualTargets[id], target)
+	}
+
+	mockClient.AssertExpectations(t)
+}
