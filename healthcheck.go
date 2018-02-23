@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"strconv"
 	"time"
 )
@@ -11,36 +12,43 @@ type kongHealthCheckConfig struct {
 }
 
 type kongHealthCheck struct {
+	ticker     *time.Ticker
 	targetChan chan target
 	client     KongClient
-	*kongHealthCheckConfig
 }
 
-func (khc *kongHealthCheck) start() error {
-	hcInterval, err := strconv.Atoi(khc.healthCheckInterval)
+func newKongHealthCheck(targetChan chan target, client KongClient, hcConfig *kongHealthCheckConfig) (*kongHealthCheck, error) {
+	hcInterval, err := strconv.Atoi(hcConfig.healthCheckInterval)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	timeChan := time.NewTicker(time.Millisecond * time.Duration(hcInterval)).C
-	go func() {
-		select {
-		case <-timeChan:
-			go khc.monitorHealthOfTargets(khc.targetChan)
-		}
-	}()
+	return &kongHealthCheck{
+		ticker:     time.NewTicker(time.Millisecond * time.Duration(hcInterval)),
+		client:     client,
+		targetChan: targetChan,
+	}, nil
+}
 
-	return nil
+func (khc *kongHealthCheck) start() {
+	timeChan := khc.ticker.C
+
+	for _ = range timeChan {
+		khc.monitorHealthOfTargets(khc.targetChan)
+	}
+
+	return
 }
 
 func (khc *kongHealthCheck) stop() {
-	return
+	khc.ticker.Stop()
 }
 
 func (khc *kongHealthCheck) monitorHealthOfTargets(targetChan chan target) {
 	upstreams, err := khc.client.upstreams()
 	if err != nil {
-		//handle
+		log.Printf("failed to fetch upstreams: %s", err)
+		return
 	}
 
 	for _, upstream := range upstreams {

@@ -1,7 +1,9 @@
 package main
 
 import (
+	"errors"
 	"testing"
+	"time"
 
 	"github.com/rShetty/asyncwait"
 	"github.com/stretchr/testify/assert"
@@ -65,14 +67,11 @@ func TestKongHealthCheckStartQueuesTargets(t *testing.T) {
 		healthCheckInterval: "10",
 	}
 
-	kongHealthCheck := &kongHealthCheck{
-		targetChan:            targetChan,
-		client:                mockClient,
-		kongHealthCheckConfig: kongHealthCheckConfig,
-	}
+	kongHealthCheck, err := newKongHealthCheck(targetChan, mockClient, kongHealthCheckConfig)
+	require.NoError(t, err, "should not have failed to intialize kong health check")
 
-	err := kongHealthCheck.start()
-	require.NoError(t, err, "should not have failed to start kong health check")
+	go kongHealthCheck.start()
+	defer kongHealthCheck.stop()
 
 	predicate := func() bool {
 		return len(targetChan) == 4
@@ -90,6 +89,29 @@ func TestKongHealthCheckStartQueuesTargets(t *testing.T) {
 	for id, target := range targetMap {
 		assert.Equal(t, actualTargets[id], target)
 	}
+
+	mockClient.AssertExpectations(t)
+}
+
+func TestKongHealthCheckStartUpstreamFetchFail(t *testing.T) {
+	targetChan := make(chan target, 100)
+	mockClient := new(mockKongClient)
+
+	mockClient.On("upstreams").Return([]upstream{}, errors.New("failed to fetch"))
+
+	kongHealthCheckConfig := &kongHealthCheckConfig{
+		healthCheckPath:     "/ping",
+		healthCheckInterval: "5",
+	}
+
+	kongHealthCheck, err := newKongHealthCheck(targetChan, mockClient, kongHealthCheckConfig)
+	require.NoError(t, err, "should not have failed to initialise kong health check")
+
+	go kongHealthCheck.start()
+	defer kongHealthCheck.stop()
+
+	//Waiting for 2 ticks before assertion
+	time.Sleep(10 * time.Millisecond)
 
 	mockClient.AssertExpectations(t)
 }

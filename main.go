@@ -31,13 +31,13 @@ func main() {
 	}
 
 	//TODO: make size of the targetChan configurable
-	healthCheck := &kongHealthCheck{
-		client:                kongClient,
-		kongHealthCheckConfig: kongHealthCheckConfig,
-		targetChan:            make(chan target, 100),
+
+	healthCheck, err := newKongHealthCheck(make(chan target, 100), kongClient, kongHealthCheckConfig)
+	if err != nil {
+		log.Fatalf("failed to initialise health checker")
 	}
 
-	healthCheck.start()
+	go healthCheck.start()
 	defer healthCheck.stop()
 
 	log.Printf("started kong-healthcheck for kong host: %s with interval: %s ms", *kongHost, *healthCheckInterval)
