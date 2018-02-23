@@ -48,7 +48,7 @@ func (kc *kongClient) upstreams() ([]upstream, error) {
 }
 
 type target struct {
-	ID     string `json:"id"`
+	ID     string `json:"id,omitempty"`
 	URL    string `json:"target"`
 	Weight string `json:"weight"`
 }
@@ -75,7 +75,18 @@ func (kc *kongClient) targetsFor(upstreamID string) ([]target, error) {
 	return targetResponse.Data, nil
 }
 
-func (kc *kongClient) setTargetWeightFor(upstreamID, targetID, weight string) error {
+func (kc *kongClient) setTargetWeightFor(upstreamID, targetURL, weight string) error {
+	target := target{URL: targetURL, Weight: weight}
+	requestBody, err := json.Marshal(target)
+	if err != nil {
+		return err
+	}
+
+	_, err = kc.doRequest(http.MethodPost, fmt.Sprintf("upstreams/%s/targets", upstreamID), requestBody)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -97,6 +108,10 @@ func (kc *kongClient) doRequest(method, path string, body []byte) ([]byte, error
 	respBytes, err = ioutil.ReadAll(response.Body)
 	if err != nil {
 		return respBytes, err
+	}
+
+	if response.StatusCode >= http.StatusBadRequest {
+		return respBytes, fmt.Errorf("failed with status: %d", response.StatusCode)
 	}
 
 	return respBytes, nil

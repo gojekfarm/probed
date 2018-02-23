@@ -108,3 +108,14 @@ func TestSetTargetWeightForSuccess(t *testing.T) {
 	err := kclient.setTargetWeightFor("upstream1", "target1", "100")
 	require.NoError(t, err, "should not have failed to set target weight")
 }
+
+func TestSetTargetWeightForFailure(t *testing.T) {
+	httpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer httpServer.Close()
+
+	kclient := &kongClient{httpClient: &http.Client{}, kongAdminURL: httpServer.URL}
+	err := kclient.setTargetWeightFor("upstream1", "target1", "100")
+	require.Error(t, err, "should have failed to set target weight")
+}
