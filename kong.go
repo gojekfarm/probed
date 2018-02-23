@@ -65,3 +65,41 @@ func (kc *kongClient) upstreams() ([]upstream, error) {
 
 	return upstreamResponse.Data, nil
 }
+
+type target struct {
+	ID     string `json:"id"`
+	URL    string `json:"target"`
+	Weight string `json:"weight"`
+}
+
+type targetResponse struct {
+	Data []target `json:"data"`
+}
+
+func (kc *kongClient) targetsFor(upstreamID string) ([]target, error) {
+	targets := []target{}
+
+	req, err := http.NewRequest(http.MethodGet, kc.kongAdminURL, nil)
+	if err != nil {
+		return targets, err
+	}
+
+	resp, err := kc.httpClient.Do(req)
+	if err != nil {
+		return targets, err
+	}
+
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return targets, err
+	}
+
+	targetResponse := &targetResponse{}
+
+	err = json.Unmarshal(respBytes, targetResponse)
+	if err != nil {
+		return targets, err
+	}
+
+	return targetResponse.Data, nil
+}
