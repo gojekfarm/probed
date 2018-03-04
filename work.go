@@ -17,12 +17,27 @@ type pinger struct {
 func (p pinger) start() {
 	for t := range p.workQ {
 		log.Printf("pinging target %s", t.URL)
+		currentWeight := t.Weight
+
 		err := p.pingRequest(t)
 		if err != nil {
 			log.Printf("target %s is down, marking it as unhealthy", t.URL)
 			err := p.kongClient.setTargetWeightFor(t.UpstreamID, t.URL, 0)
 			if err != nil {
 				log.Printf("failed to mark target %s as unhealthy: reason: %s", t.URL, err)
+				continue
+			}
+
+			continue
+		}
+
+		// Previously marked unhealthy node is healthy
+		if currentWeight <= 0 && err == nil {
+			log.Printf("target %s is up, marking it as healthy", t.URL)
+			err := p.kongClient.setTargetWeightFor(t.UpstreamID, t.URL, 100)
+			if err != nil {
+				log.Printf("failed to mark target %s as healthy: reason: %s", t.URL, err)
+				continue
 			}
 		}
 	}

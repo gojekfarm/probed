@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestPingSuccess(t *testing.T) {
+func TestPingCheckMarksUnhealthyNodes(t *testing.T) {
 	mockClient := new(mockKongClient)
 
 	svr1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -38,6 +38,45 @@ func TestPingSuccess(t *testing.T) {
 	pingQ <- target{URL: svr3.URL, Weight: 100, UpstreamID: "upstream3"}
 
 	mockClient.On("setTargetWeightFor", "upstream3", svr3.URL, 0).Return(nil)
+
+	p := pinger{kongClient: mockClient, pingClient: &http.Client{}, pingPath: *healthCheckPath, workQ: pingQ}
+	go p.start()
+
+	predicate := func() bool { return len(pingQ) == 0 }
+	successful := asyncwait.NewAsyncWait(100, 5).Check(predicate)
+	require.True(t, successful)
+
+	mockClient.AssertExpectations(t)
+}
+
+func TestPingCheckMarksHealthyNodes(t *testing.T) {
+	mockClient := new(mockKongClient)
+
+	svr1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.Equal(t, "/ping", r.URL.Path)
+
+		w.WriteHeader(http.StatusOK)
+	}))
+	svr2 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.Equal(t, "/ping", r.URL.Path)
+
+		w.WriteHeader(http.StatusOK)
+	}))
+	svr3 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.Equal(t, "/ping", r.URL.Path)
+
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	pingQ := make(chan target, 10)
+	pingQ <- target{URL: svr1.URL, Weight: 0, UpstreamID: "upstream1"}
+	pingQ <- target{URL: svr2.URL, Weight: 100, UpstreamID: "upstream2"}
+	pingQ <- target{URL: svr3.URL, Weight: 100, UpstreamID: "upstream3"}
+
+	mockClient.On("setTargetWeightFor", "upstream1", svr1.URL, 100).Return(nil)
 
 	p := pinger{kongClient: mockClient, pingClient: &http.Client{}, pingPath: *healthCheckPath, workQ: pingQ}
 	go p.start()
