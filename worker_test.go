@@ -10,14 +10,12 @@ import (
 func TestWorkerManagerStartingJobs(t *testing.T) {
 	output := 0
 
-	myJobQ := make(chan target, 2)
-	myJobFn := func(jobQ chan target) {
+	myJobFn := func() {
 		output = output + 1
 	}
 
 	wm := workerManager{
 		workerCount: 2,
-		workQ:       myJobQ,
 		jobFn:       myJobFn,
 	}
 

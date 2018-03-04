@@ -2,13 +2,12 @@ package main
 
 type workerManager struct {
 	workerCount int
-	workQ       chan target
-	jobFn       func(chan target)
+	jobFn       func()
 }
 
 func (wm workerManager) start() {
 	for i := 0; i < wm.workerCount; i++ {
-		go wm.jobFn(wm.workQ)
+		go wm.jobFn()
 	}
 }
 

@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -40,11 +41,12 @@ func main() {
 	go healthCheck.start()
 	defer healthCheck.stop()
 
+	p := pinger{kongClient: kongClient, pingClient: &http.Client{}, pingPath: *healthCheckPath, workQ: pingQ}
+
 	// TODO: accept workerCount from command line args
 	wm := workerManager{
 		workerCount: 100,
-		workQ:       pingQ,
-		jobFn:       ping,
+		jobFn:       p.start,
 	}
 
 	wm.start()
