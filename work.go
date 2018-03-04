@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 )
 
@@ -11,10 +12,11 @@ const unhealthyNodeWeight = 0
 const healthyNodeWeight = 100
 
 type pinger struct {
-	kongClient KongClient
-	pingClient *http.Client
-	pingPath   string
-	workQ      chan target
+	kongClient      KongClient
+	pingClient      *http.Client
+	pingPath        string
+	workQ           chan target
+	healthCheckType string
 }
 
 func (p pinger) start() {
@@ -22,7 +24,13 @@ func (p pinger) start() {
 		log.Printf("pinging target %s", t.URL)
 		currentWeight := t.Weight
 
-		err := p.pingRequest(t)
+		var err error
+		if p.healthCheckType == "http" {
+			err = p.httpPingCheck(t)
+		} else if p.healthCheckType == "tcp" {
+			err = p.tcpPortCheck(t)
+		}
+
 		if err != nil && currentWeight > 0 {
 			log.Printf("target %s is down, marking it as unhealthy", t.URL)
 			err := p.kongClient.setTargetWeightFor(t.UpstreamID, t.URL, unhealthyNodeWeight)
@@ -48,7 +56,22 @@ func (p pinger) start() {
 	}
 }
 
-func (p pinger) pingRequest(t target) error {
+func (p pinger) tcpPortCheck(t target) error {
+	tcpAddr, err := net.ResolveTCPAddr("tcp4", t.URL)
+	if err != nil {
+		return err
+	}
+
+	conn, err := net.DialTCP("tcp", nil, tcpAddr)
+	if err != nil {
+		return err
+	}
+
+	defer conn.Close()
+	return nil
+}
+
+func (p pinger) httpPingCheck(t target) error {
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s", t.URL, p.pingPath), nil)
 	if err != nil {
 		return err

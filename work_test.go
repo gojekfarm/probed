@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestPingCheckMarksUnhealthyNodes(t *testing.T) {
+func TestPingCheckHTTPMarksUnhealthyNodes(t *testing.T) {
 	mockClient := new(mockKongClient)
 
 	svr1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -40,7 +41,7 @@ func TestPingCheckMarksUnhealthyNodes(t *testing.T) {
 
 	mockClient.On("setTargetWeightFor", "upstream3", svr3.URL, 0).Return(nil)
 
-	p := pinger{kongClient: mockClient, pingClient: &http.Client{}, pingPath: *healthCheckPath, workQ: pingQ}
+	p := pinger{kongClient: mockClient, pingClient: &http.Client{}, pingPath: *healthCheckPath, workQ: pingQ, healthCheckType: "http"}
 	go p.start()
 
 	predicate := func() bool { return len(pingQ) == 0 }
@@ -50,7 +51,7 @@ func TestPingCheckMarksUnhealthyNodes(t *testing.T) {
 	mockClient.AssertExpectations(t)
 }
 
-func TestPingCheckMarksHealthyNodes(t *testing.T) {
+func TestPingCheckHTTPMarksHealthyNodes(t *testing.T) {
 	mockClient := new(mockKongClient)
 
 	svr1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -79,7 +80,7 @@ func TestPingCheckMarksHealthyNodes(t *testing.T) {
 
 	mockClient.On("setTargetWeightFor", "upstream1", svr1.URL, 100).Return(nil)
 
-	p := pinger{kongClient: mockClient, pingClient: &http.Client{}, pingPath: *healthCheckPath, workQ: pingQ}
+	p := pinger{kongClient: mockClient, pingClient: &http.Client{}, pingPath: *healthCheckPath, workQ: pingQ, healthCheckType: "http"}
 	go p.start()
 
 	predicate := func() bool { return len(pingQ) == 0 }
@@ -89,7 +90,7 @@ func TestPingCheckMarksHealthyNodes(t *testing.T) {
 	mockClient.AssertExpectations(t)
 }
 
-func TestPingCheckMarksHealthyNodesFails(t *testing.T) {
+func TestPingCheckHTTPMarksHealthyNodesFails(t *testing.T) {
 	mockClient := new(mockKongClient)
 
 	svr1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -119,7 +120,7 @@ func TestPingCheckMarksHealthyNodesFails(t *testing.T) {
 	mockClient.On("setTargetWeightFor", "upstream1", svr1.URL, 100).Return(nil)
 	mockClient.On("setTargetWeightFor", "upstream2", svr2.URL, 100).Return(errors.New("failed"))
 
-	p := pinger{kongClient: mockClient, pingClient: &http.Client{}, pingPath: *healthCheckPath, workQ: pingQ}
+	p := pinger{kongClient: mockClient, pingClient: &http.Client{}, pingPath: *healthCheckPath, workQ: pingQ, healthCheckType: "http"}
 	go p.start()
 
 	predicate := func() bool { return len(pingQ) == 0 }
@@ -129,7 +130,7 @@ func TestPingCheckMarksHealthyNodesFails(t *testing.T) {
 	mockClient.AssertExpectations(t)
 }
 
-func TestPingCheckNotMarksNodeAsUnhealthyIfAlreadyUnhealthy(t *testing.T) {
+func TestPingCheckHTTPNotMarksNodeAsUnhealthyIfAlreadyUnhealthy(t *testing.T) {
 	mockClient := new(mockKongClient)
 
 	svr1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -156,7 +157,33 @@ func TestPingCheckNotMarksNodeAsUnhealthyIfAlreadyUnhealthy(t *testing.T) {
 	pingQ <- target{URL: svr2.URL, Weight: 100, UpstreamID: "upstream2"}
 	pingQ <- target{URL: svr3.URL, Weight: 0, UpstreamID: "upstream3"}
 
-	p := pinger{kongClient: mockClient, pingClient: &http.Client{}, pingPath: *healthCheckPath, workQ: pingQ}
+	p := pinger{kongClient: mockClient, pingClient: &http.Client{}, pingPath: *healthCheckPath, workQ: pingQ, healthCheckType: "http"}
+	go p.start()
+
+	predicate := func() bool { return len(pingQ) == 0 }
+	successful := asyncwait.NewAsyncWait(100, 5).Check(predicate)
+	require.True(t, successful)
+
+	mockClient.AssertExpectations(t)
+}
+
+func TestTCPPortCheckMarksUnhealthyNodes(t *testing.T) {
+	l, err := net.Listen("tcp", "localhost:3000")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer l.Close()
+
+	mockClient := new(mockKongClient)
+
+	pingQ := make(chan target, 10)
+	pingQ <- target{URL: "localhost:3000", Weight: 100, UpstreamID: "upstream1"}
+	pingQ <- target{URL: "localhost:3000", Weight: 100, UpstreamID: "upstream2"}
+	pingQ <- target{URL: "localhost:4000", Weight: 100, UpstreamID: "upstream3"}
+
+	mockClient.On("setTargetWeightFor", "upstream3", "localhost:4000", 0).Return(nil)
+
+	p := pinger{kongClient: mockClient, pingClient: &http.Client{}, pingPath: *healthCheckPath, workQ: pingQ, healthCheckType: "tcp"}
 	go p.start()
 
 	predicate := func() bool { return len(pingQ) == 0 }
