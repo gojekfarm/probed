@@ -14,12 +14,9 @@ func TestWorkerManagerStartingJobs(t *testing.T) {
 		output = output + 1
 	}
 
-	wm := workerManager{
-		workerCount: 2,
-		jobFn:       myJobFn,
-	}
+	wm := newWorkerManager(2, myJobFn)
 
-	wm.start()
+	go wm.start()
 	defer wm.stop()
 
 	predicate := func() bool {

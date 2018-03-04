@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -15,6 +16,8 @@ type kongHealthCheck struct {
 	ticker     *time.Ticker
 	targetChan chan target
 	client     KongClient
+
+	wg sync.WaitGroup
 }
 
 func newKongHealthCheck(targetChan chan target, client KongClient, hcConfig *kongHealthCheckConfig) (*kongHealthCheck, error) {
@@ -41,6 +44,8 @@ func (khc *kongHealthCheck) start() {
 }
 
 func (khc *kongHealthCheck) stop() {
+	khc.wg.Wait()
+	close(khc.targetChan)
 	khc.ticker.Stop()
 }
 
@@ -51,8 +56,12 @@ func (khc *kongHealthCheck) monitorHealthOfTargets(targetChan chan target) {
 		return
 	}
 
-	for _, upstream := range upstreams {
-		go khc.fetchAndQueueTargetsFor(upstream.ID, targetChan)
+	for _, u := range upstreams {
+		khc.wg.Add(1)
+		go func(u upstream) {
+			defer khc.wg.Done()
+			khc.fetchAndQueueTargetsFor(u.ID, targetChan)
+		}(u)
 	}
 
 	return
