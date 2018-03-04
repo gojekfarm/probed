@@ -16,7 +16,7 @@ func (mkc *mockKongClient) targetsFor(upstreamID string) ([]target, error) {
 	return args.Get(0).([]target), args.Error(1)
 }
 
-func (mkc *mockKongClient) setTargetWeightFor(upstreamID, targetID, weight string) error {
+func (mkc *mockKongClient) setTargetWeightFor(upstreamID, targetID string, weight int) error {
 	args := mkc.Called(upstreamID, targetID, weight)
 	return args.Error(0)
 }

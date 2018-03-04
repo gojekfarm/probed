@@ -35,7 +35,7 @@ func main() {
 	pingQ := make(chan target, 100)
 	healthCheck, err := newKongHealthCheck(pingQ, kongClient, kongHealthCheckConfig)
 	if err != nil {
-		log.Fatalf("failed to initialise health checker")
+		log.Fatalf("failed to initialise health checker: %s", err)
 	}
 
 	go healthCheck.start()

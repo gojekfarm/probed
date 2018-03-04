@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
@@ -12,7 +13,7 @@ import (
 type KongClient interface {
 	upstreams() ([]upstream, error)
 	targetsFor(upstreamID string) ([]target, error)
-	setTargetWeightFor(upstreamID, targetID, weight string) error
+	setTargetWeightFor(upstreamID, targetID string, weight int) error
 }
 
 type kongClient struct {
@@ -57,8 +58,8 @@ func (kc *kongClient) upstreams() ([]upstream, error) {
 type target struct {
 	ID         string `json:"id,omitempty"`
 	URL        string `json:"target"`
-	Weight     string `json:"weight"`
-	UpstreamID string `json:"upstream_id"`
+	Weight     int    `json:"weight"`
+	UpstreamID string `json:"upstream_id,omitempty"`
 }
 
 type targetResponse struct {
@@ -83,7 +84,7 @@ func (kc *kongClient) targetsFor(upstreamID string) ([]target, error) {
 	return targetResponse.Data, nil
 }
 
-func (kc *kongClient) setTargetWeightFor(upstreamID, targetURL, weight string) error {
+func (kc *kongClient) setTargetWeightFor(upstreamID, targetURL string, weight int) error {
 	target := target{URL: targetURL, Weight: weight}
 	requestBody, err := json.Marshal(target)
 	if err != nil {
@@ -100,11 +101,14 @@ func (kc *kongClient) setTargetWeightFor(upstreamID, targetURL, weight string) e
 
 func (kc *kongClient) doRequest(method, path string, body []byte) ([]byte, error) {
 	var respBytes []byte
+	log.Print(fmt.Sprintf("%s/%s", kc.kongAdminURL, path))
 
 	req, err := http.NewRequest(method, fmt.Sprintf("%s/%s", kc.kongAdminURL, path), bytes.NewBuffer(body))
 	if err != nil {
-		return respBytes, err
+		return respBytes, fmt.Errorf("failed to create request: %s", err)
 	}
+
+	req.Header.Set("Content-Type", "application/json")
 
 	response, err := kc.httpClient.Do(req)
 	if err != nil {

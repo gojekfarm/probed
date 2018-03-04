@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -15,9 +16,14 @@ type pinger struct {
 
 func (p pinger) start() {
 	for t := range p.workQ {
+		log.Printf("pinging target %s", t.URL)
 		err := p.pingRequest(t)
 		if err != nil {
-			p.kongClient.setTargetWeightFor(t.UpstreamID, t.URL, "0")
+			log.Printf("target %s is down, marking it as unhealthy", t.URL)
+			err := p.kongClient.setTargetWeightFor(t.UpstreamID, t.URL, 0)
+			if err != nil {
+				log.Printf("failed to mark target %s as unhealthy: reason: %s", t.URL, err)
+			}
 		}
 	}
 }

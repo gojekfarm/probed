@@ -29,12 +29,12 @@ func TestKongHealthCheckStartQueuesTargets(t *testing.T) {
 		{
 			ID:     "1.1",
 			URL:    "1.2.3.4:80",
-			Weight: "1",
+			Weight: 1,
 		},
 		{
 			ID:     "1.2",
 			URL:    "1.2.3.5:80",
-			Weight: "0",
+			Weight: 0,
 		},
 	}
 
@@ -42,12 +42,12 @@ func TestKongHealthCheckStartQueuesTargets(t *testing.T) {
 		{
 			ID:     "2.1",
 			URL:    "1.2.3.6:80",
-			Weight: "100",
+			Weight: 100,
 		},
 		{
 			ID:     "2.2",
 			URL:    "1.2.3.7:80",
-			Weight: "150",
+			Weight: 150,
 		},
 	}
 
@@ -135,12 +135,12 @@ func TestKongHealthCheckStartWhenFetchTargetFailsForAUpstream(t *testing.T) {
 		{
 			ID:     "1.1",
 			URL:    "1.2.3.4:80",
-			Weight: "1",
+			Weight: 1,
 		},
 		{
 			ID:     "1.2",
 			URL:    "1.2.3.5:80",
-			Weight: "0",
+			Weight: 0,
 		},
 	}
 
