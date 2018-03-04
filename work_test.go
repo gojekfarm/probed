@@ -176,12 +176,14 @@ func TestTCPPortCheckMarksUnhealthyNodes(t *testing.T) {
 
 	mockClient := new(mockKongClient)
 
-	pingQ := make(chan target, 10)
-	pingQ <- target{URL: "localhost:3000", Weight: 100, UpstreamID: "upstream1"}
+	pingQ := make(chan target, 4)
+	pingQ <- target{URL: "localhost:3000", Weight: 0, UpstreamID: "upstream1"}
 	pingQ <- target{URL: "localhost:3000", Weight: 100, UpstreamID: "upstream2"}
-	pingQ <- target{URL: "localhost:4000", Weight: 100, UpstreamID: "upstream3"}
+	pingQ <- target{URL: "localhost:4000", Weight: 0, UpstreamID: "upstream3"}
+	pingQ <- target{URL: "localhost:4000", Weight: 100, UpstreamID: "upstream4"}
 
-	mockClient.On("setTargetWeightFor", "upstream3", "localhost:4000", 0).Return(nil)
+	mockClient.On("setTargetWeightFor", "upstream1", "localhost:3000", 100).Return(nil)
+	mockClient.On("setTargetWeightFor", "upstream4", "localhost:4000", 0).Return(nil)
 
 	p := pinger{kongClient: mockClient, pingClient: &http.Client{}, pingPath: *healthCheckPath, workQ: pingQ, healthCheckType: "tcp"}
 	go p.start()
