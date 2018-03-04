@@ -7,6 +7,9 @@ import (
 	"net/http"
 )
 
+const unhealthyNodeWeight = 0
+const healthyNodeWeight = 100
+
 type pinger struct {
 	kongClient KongClient
 	pingClient *http.Client
@@ -22,7 +25,7 @@ func (p pinger) start() {
 		err := p.pingRequest(t)
 		if err != nil && currentWeight > 0 {
 			log.Printf("target %s is down, marking it as unhealthy", t.URL)
-			err := p.kongClient.setTargetWeightFor(t.UpstreamID, t.URL, 0)
+			err := p.kongClient.setTargetWeightFor(t.UpstreamID, t.URL, unhealthyNodeWeight)
 			if err != nil {
 				log.Printf("failed to mark target %s as unhealthy: reason: %s", t.URL, err)
 				continue
@@ -34,7 +37,7 @@ func (p pinger) start() {
 		// Previously marked unhealthy node is healthy
 		if currentWeight <= 0 && err == nil {
 			log.Printf("target %s is up, marking it as healthy", t.URL)
-			err := p.kongClient.setTargetWeightFor(t.UpstreamID, t.URL, 100)
+			err := p.kongClient.setTargetWeightFor(t.UpstreamID, t.URL, healthyNodeWeight)
 			if err != nil {
 				log.Printf("failed to mark target %s as healthy: reason: %s", t.URL, err)
 				continue
