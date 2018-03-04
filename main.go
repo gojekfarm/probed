@@ -17,6 +17,7 @@ var healthCheckPath = flag.String("health-check-path", "/ping", "path to check f
 var healthCheckType = flag.String("health-check-type", "tcp", "supports http or tcp checks")
 
 var workerCount = flag.Int("worker-count", 100, "no of workers which participate in healthcheck of targets")
+var targetsQLen = flag.Int("targets-queue-length", 100, "length of the queue for storing targets")
 
 func main() {
 	flag.Parse()
@@ -28,9 +29,7 @@ func main() {
 		log.Fatalf("`kong` flag did not provide kong host")
 	}
 
-	//TODO: make size of the targetChan configurable
-	pingQ := make(chan target, 100)
-
+	pingQ := make(chan target, *targetsQLen)
 	kongClient := newKongClient(*kongHost, *kongAdminPort)
 
 	p := pinger{
