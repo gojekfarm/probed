@@ -20,7 +20,7 @@ func (p pinger) start() {
 		currentWeight := t.Weight
 
 		err := p.pingRequest(t)
-		if err != nil {
+		if err != nil && currentWeight > 0 {
 			log.Printf("target %s is down, marking it as unhealthy", t.URL)
 			err := p.kongClient.setTargetWeightFor(t.UpstreamID, t.URL, 0)
 			if err != nil {
