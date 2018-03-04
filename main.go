@@ -31,14 +31,24 @@ func main() {
 	}
 
 	//TODO: make size of the targetChan configurable
-
-	healthCheck, err := newKongHealthCheck(make(chan target, 100), kongClient, kongHealthCheckConfig)
+	pingQ := make(chan target, 100)
+	healthCheck, err := newKongHealthCheck(pingQ, kongClient, kongHealthCheckConfig)
 	if err != nil {
 		log.Fatalf("failed to initialise health checker")
 	}
 
 	go healthCheck.start()
 	defer healthCheck.stop()
+
+	// TODO: accept workerCount from command line args
+	wm := workerManager{
+		workerCount: 100,
+		workQ:       pingQ,
+		jobFn:       ping,
+	}
+
+	wm.start()
+	defer wm.stop()
 
 	log.Printf("started kong-healthcheck for kong host: %s with interval: %s ms", *kongHost, *healthCheckInterval)
 	sig := <-sigChan
