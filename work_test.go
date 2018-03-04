@@ -167,7 +167,7 @@ func TestPingCheckHTTPNotMarksNodeAsUnhealthyIfAlreadyUnhealthy(t *testing.T) {
 	mockClient.AssertExpectations(t)
 }
 
-func TestTCPPortCheckMarksUnhealthyNodes(t *testing.T) {
+func TestTCPPortCheckMarksNodesHealthyOrUnhealthy(t *testing.T) {
 	l, err := net.Listen("tcp", "localhost:3000")
 	if err != nil {
 		t.Fatal(err)
