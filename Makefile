@@ -13,7 +13,7 @@ build-deps:
 
 compile:
 	mkdir -p out/
-	go build -race ./...
+	go build -race -o out/ping-kong
 
 build: build-deps compile fmt vet lint
 
