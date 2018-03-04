@@ -39,6 +39,8 @@ func (p pinger) start() {
 				log.Printf("failed to mark target %s as healthy: reason: %s", t.URL, err)
 				continue
 			}
+
+			continue
 		}
 	}
 }
