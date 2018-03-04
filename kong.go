@@ -55,9 +55,10 @@ func (kc *kongClient) upstreams() ([]upstream, error) {
 }
 
 type target struct {
-	ID     string `json:"id,omitempty"`
-	URL    string `json:"target"`
-	Weight string `json:"weight"`
+	ID         string `json:"id,omitempty"`
+	URL        string `json:"target"`
+	Weight     string `json:"weight"`
+	UpstreamID string `json:"upstream_id"`
 }
 
 type targetResponse struct {

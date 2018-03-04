@@ -33,7 +33,7 @@ func newKongHealthCheck(targetChan chan target, client KongClient, hcConfig *kon
 func (khc *kongHealthCheck) start() {
 	timeChan := khc.ticker.C
 
-	for _ = range timeChan {
+	for range timeChan {
 		khc.monitorHealthOfTargets(khc.targetChan)
 	}
 
