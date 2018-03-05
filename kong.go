@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
@@ -101,7 +100,6 @@ func (kc *kongClient) setTargetWeightFor(upstreamID, targetURL string, weight in
 
 func (kc *kongClient) doRequest(method, path string, body []byte) ([]byte, error) {
 	var respBytes []byte
-	log.Print(fmt.Sprintf("%s/%s", kc.kongAdminURL, path))
 
 	req, err := http.NewRequest(method, fmt.Sprintf("%s/%s", kc.kongAdminURL, path), bytes.NewBuffer(body))
 	if err != nil {
