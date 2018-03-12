@@ -1,5 +1,7 @@
 # ProbeD
 
+[![Build Status](https://travis-ci.org/gojekfarm/probed.svg?branch=master)](https://travis-ci.org/gojekfarm/probed)
+
 ## Description
 Health Checker for Kong Upstream targets.
 
