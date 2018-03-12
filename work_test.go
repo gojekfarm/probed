@@ -168,11 +168,15 @@ func TestPingCheckHTTPNotMarksNodeAsUnhealthyIfAlreadyUnhealthy(t *testing.T) {
 }
 
 func TestTCPPortCheckMarksNodesHealthyOrUnhealthy(t *testing.T) {
-	l, err := net.Listen("tcp", "localhost:3000")
+	listener, err := net.Listen("tcp", "localhost:3000")
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer l.Close()
+	defer func() {
+		if err := listener.Close(); err != nil {
+			t.Fatal(err)
+		}
+	}()
 
 	mockClient := new(mockKongClient)
 
@@ -185,10 +189,18 @@ func TestTCPPortCheckMarksNodesHealthyOrUnhealthy(t *testing.T) {
 	mockClient.On("setTargetWeightFor", "upstream1", "localhost:3000", 100).Return(nil)
 	mockClient.On("setTargetWeightFor", "upstream4", "localhost:4000", 0).Return(nil)
 
-	p := pinger{kongClient: mockClient, pingClient: &http.Client{}, pingPath: *healthCheckPath, workQ: pingQ, healthCheckType: "tcp"}
+	p := pinger{
+		kongClient:      mockClient,
+		pingClient:      &http.Client{},
+		pingPath:        *healthCheckPath,
+		workQ:           pingQ,
+		healthCheckType: "tcp",
+	}
 	go p.start()
 
-	predicate := func() bool { return len(pingQ) == 0 }
+	predicate := func() bool {
+		return len(pingQ) == 0
+	}
 	successful := asyncwait.NewAsyncWait(100, 5).Check(predicate)
 	require.True(t, successful)
 

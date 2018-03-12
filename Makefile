@@ -4,7 +4,6 @@ all: build test
 ALL_PACKAGES=$(shell go list ./... | grep -v "vendor")
 
 setup:
-	mkdir -p $(GOPATH)/bin
 	go get -u github.com/golang/dep/cmd/dep
 	go get -u github.com/golang/lint/golint
 
@@ -12,8 +11,8 @@ build-deps:
 	dep ensure
 
 compile:
-	mkdir -p out/
-	go build -race -o out/ping-kong
+	mkdir -p build
+	go build -race -o build/probed
 
 build: build-deps compile fmt vet lint
 
@@ -35,4 +34,4 @@ test-cover-html:
 	$(foreach pkg, $(ALL_PACKAGES),\
 	ENVIRONMENT=test go test -coverprofile=coverage.out -covermode=count $(pkg);\
 	tail -n +2 coverage.out >> coverage-all.out;)
-	go tool cover -html=coverage-all.out -o out/coverage.html
+	go tool cover -html=coverage-all.out -o build/coverage.html

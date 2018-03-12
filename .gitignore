@@ -1,18 +1,49 @@
-# Binaries for programs and plugins
-*.exe
-*.dll
+# OS & Project Temporay Files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+Desktop.ini
+$RECYCLE.BIN
+Icon
+*.swp
+.tags*
+
+# Text Editor & IDE
+*~
+\#*\#
+.\#*
+*#
+.#*
+\#*#
+.*.sw[a-z]
+*.un~
+/.idea
+*.iml
+*.sublime-workspace
+*.sublime-project
+tags
+TAGS
+
+# Go's Temporary Files
+*.o
+*.a
 *.so
-*.dylib
-
-# Test binary, build with `go test -c`
+_obj
+_test
+*.[568vq]
+[568vq].out
+*.cgo1.go
+*.cgo2.c
+_cgo_defun.c
+_cgo_gotypes.go
+_cgo_export.*
+_testmain.go
+*.exe
 *.test
-
-# Output of the go coverage tool, specifically when used with LiteIDE
+*.prof
 *.out
-
-# Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
-.glide/
-kong-healthcheck
-ping-kong
-vendor/
-out/
+/vendor/
+/build/
+/out/
