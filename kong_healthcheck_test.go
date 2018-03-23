@@ -12,7 +12,7 @@ import (
 
 func TestKongHealthCheckStartQueuesTargets(t *testing.T) {
 	targetChan := make(chan target, 100)
-	mockClient := new(mockKongClient)
+	mockClient := new(mockClient)
 
 	availableUpstreams := []upstream{
 		{
@@ -95,7 +95,7 @@ func TestKongHealthCheckStartQueuesTargets(t *testing.T) {
 
 func TestKongHealthCheckStartUpstreamFetchFail(t *testing.T) {
 	targetChan := make(chan target, 100)
-	mockClient := new(mockKongClient)
+	mockClient := new(mockClient)
 
 	mockClient.On("upstreams").Return([]upstream{}, errors.New("failed to fetch"))
 
@@ -118,7 +118,7 @@ func TestKongHealthCheckStartUpstreamFetchFail(t *testing.T) {
 
 func TestKongHealthCheckStartWhenFetchTargetFailsForAUpstream(t *testing.T) {
 	targetChan := make(chan target, 100)
-	mockClient := new(mockKongClient)
+	mockClient := new(mockClient)
 
 	availableUpstreams := []upstream{
 		{

@@ -30,10 +30,10 @@ func main() {
 	}
 
 	pingQ := make(chan target, *targetsQLen)
-	kongClient := newKongClient(*kongHost, *kongAdminPort)
+	client := newKongClient(*kongHost, *kongAdminPort)
 
 	p := pinger{
-		kongClient:      kongClient,
+		client:          client,
 		pingClient:      &http.Client{},
 		pingPath:        *healthCheckPath,
 		workQ:           pingQ,
@@ -50,7 +50,7 @@ func main() {
 		healthCheckInterval: *healthCheckInterval,
 	}
 
-	healthCheck, err := newKongHealthCheck(pingQ, kongClient, kongHealthCheckConfig)
+	healthCheck, err := newKongHealthCheck(pingQ, client, kongHealthCheckConfig)
 	if err != nil {
 		log.Fatalf("failed to initialise health checker: %s", err)
 	}
