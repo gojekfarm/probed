@@ -53,6 +53,11 @@ Usage of ./build/probed:
 
 ```
 
+## Extension
+
+Probed support fluent interface for the [Client](https://www.godoc.org/github.com/gojektech/probed#Client) and can be easily extented to support any Loadbalancer.
+Please check [kongClient](https://www.godoc.org/github.com/gojektech/probed#Client)  for more detail.
+
 ## License
 ```
 Copyright 2018, GO-JEK Farm <http://gojek.farm>
