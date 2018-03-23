@@ -6,13 +6,13 @@
 
 ProbeD is a transparent health checker service which sits beside a loadbalancer and dynamically remove the upstream services for which health checks fails, Probed is scalable and check health checks asynchronously.
 
-- It currently support Kong but can be easily extend to any other loadbalancer like haproxy and nginx.
+- It currently supports Kong but can be easily extend to any other loadbalancer like haproxy and nginx.
 - It support both http and tcp checks.
 
 
 ## Problem it Solves 
 
-Kong prior to 1.2 does not have health checks and there is no way to remove the faulty upstream servers, which can result in failure of requests while deploying or during maintenance mode.
+Kong prior to .12 does not have health checks and there is no way to remove the faulty upstream servers, which can result in failure of requests while deploying or during maintenance mode.
 
 Probed can be run as side car or co process with Kong and supplement it for the auto removal of the unavailable upstream servers and can help in implementing rolling deployments.
 
