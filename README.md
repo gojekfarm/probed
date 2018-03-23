@@ -1,6 +1,6 @@
 # ProbeD
 
-[![Build Status](https://travis-ci.org/gojekfarm/probed.svg?branch=master)](https://travis-ci.org/gojekfarm/probed)
+[![Build Status](https://travis-ci.org/gojektech/probed.svg?branch=master)](https://travis-ci.org/gojekfarm/probed)
 
 ## Description
 
@@ -19,7 +19,7 @@ Probed can be run as side car or co process with Kong and supplement it for the 
 ## Installation
 
 ```
-go get -u github.com/gojekfarm/probed
+go get -u github.com/gojektech/probed
 ```
 
 ## Deployment 
