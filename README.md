@@ -22,6 +22,12 @@ Probed can be run as side car or co process with Kong and supplement it for the 
 go get -u github.com/gojekfarm/probed
 ```
 
+## Deployment 
+
+ProbeD can be deployed as co process/sidecar with the load balancer (Kong) like following diagram, where it automatically fetch the upstream servers and remove those if health check fails.
+
+<p align="center"><img src="docs/deployment.svg" width="360"></p>
+
 ## Configuration
 
 Probed can be configure using following flags
