@@ -1,6 +1,6 @@
 # ProbeD
 
-[![Build Status](https://travis-ci.org/gojekfarm/probed.svg?branch=master)](https://travis-ci.org/gojekfarm/probed)
+[![Build Status](https://travis-ci.org/gojektech/probed.svg?branch=master)](https://travis-ci.org/gojekfarm/probed)
 
 ## Description
 
@@ -19,7 +19,7 @@ Probed can be run as side car or co process with Kong and supplement it for the 
 ## Installation
 
 ```
-go get -u github.com/gojekfarm/probed
+go get -u github.com/gojektech/probed
 ```
 
 ## Deployment 
@@ -52,6 +52,11 @@ Usage of ./build/probed:
     	no of workers which participate in healthcheck of targets (default 100)
 
 ```
+
+## Extension
+
+Probed support fluent interface for the [Client](https://www.godoc.org/github.com/gojektech/probed#Client) and can be easily extented to support any Loadbalancer.
+Please check [kongClient](https://www.godoc.org/github.com/gojektech/probed#Client)  for more detail.
 
 ## License
 ```

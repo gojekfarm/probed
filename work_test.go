@@ -13,7 +13,7 @@ import (
 )
 
 func TestPingCheckHTTPMarksUnhealthyNodes(t *testing.T) {
-	mockClient := new(mockKongClient)
+	mockClient := new(mockClient)
 
 	svr1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
@@ -41,7 +41,7 @@ func TestPingCheckHTTPMarksUnhealthyNodes(t *testing.T) {
 
 	mockClient.On("setTargetWeightFor", "upstream3", svr3.URL, 0).Return(nil)
 
-	p := pinger{kongClient: mockClient, pingClient: &http.Client{}, pingPath: *healthCheckPath, workQ: pingQ, healthCheckType: "http"}
+	p := pinger{client: mockClient, pingClient: &http.Client{}, pingPath: *healthCheckPath, workQ: pingQ, healthCheckType: "http"}
 	go p.start()
 
 	predicate := func() bool { return len(pingQ) == 0 }
@@ -52,7 +52,7 @@ func TestPingCheckHTTPMarksUnhealthyNodes(t *testing.T) {
 }
 
 func TestPingCheckHTTPMarksHealthyNodes(t *testing.T) {
-	mockClient := new(mockKongClient)
+	mockClient := new(mockClient)
 
 	svr1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
@@ -80,7 +80,7 @@ func TestPingCheckHTTPMarksHealthyNodes(t *testing.T) {
 
 	mockClient.On("setTargetWeightFor", "upstream1", svr1.URL, 100).Return(nil)
 
-	p := pinger{kongClient: mockClient, pingClient: &http.Client{}, pingPath: *healthCheckPath, workQ: pingQ, healthCheckType: "http"}
+	p := pinger{client: mockClient, pingClient: &http.Client{}, pingPath: *healthCheckPath, workQ: pingQ, healthCheckType: "http"}
 	go p.start()
 
 	predicate := func() bool { return len(pingQ) == 0 }
@@ -91,7 +91,7 @@ func TestPingCheckHTTPMarksHealthyNodes(t *testing.T) {
 }
 
 func TestPingCheckHTTPMarksHealthyNodesFails(t *testing.T) {
-	mockClient := new(mockKongClient)
+	mockClient := new(mockClient)
 
 	svr1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
@@ -120,7 +120,7 @@ func TestPingCheckHTTPMarksHealthyNodesFails(t *testing.T) {
 	mockClient.On("setTargetWeightFor", "upstream1", svr1.URL, 100).Return(nil)
 	mockClient.On("setTargetWeightFor", "upstream2", svr2.URL, 100).Return(errors.New("failed"))
 
-	p := pinger{kongClient: mockClient, pingClient: &http.Client{}, pingPath: *healthCheckPath, workQ: pingQ, healthCheckType: "http"}
+	p := pinger{client: mockClient, pingClient: &http.Client{}, pingPath: *healthCheckPath, workQ: pingQ, healthCheckType: "http"}
 	go p.start()
 
 	predicate := func() bool { return len(pingQ) == 0 }
@@ -131,7 +131,7 @@ func TestPingCheckHTTPMarksHealthyNodesFails(t *testing.T) {
 }
 
 func TestPingCheckHTTPNotMarksNodeAsUnhealthyIfAlreadyUnhealthy(t *testing.T) {
-	mockClient := new(mockKongClient)
+	mockClient := new(mockClient)
 
 	svr1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
@@ -157,7 +157,7 @@ func TestPingCheckHTTPNotMarksNodeAsUnhealthyIfAlreadyUnhealthy(t *testing.T) {
 	pingQ <- target{URL: svr2.URL, Weight: 100, UpstreamID: "upstream2"}
 	pingQ <- target{URL: svr3.URL, Weight: 0, UpstreamID: "upstream3"}
 
-	p := pinger{kongClient: mockClient, pingClient: &http.Client{}, pingPath: *healthCheckPath, workQ: pingQ, healthCheckType: "http"}
+	p := pinger{client: mockClient, pingClient: &http.Client{}, pingPath: *healthCheckPath, workQ: pingQ, healthCheckType: "http"}
 	go p.start()
 
 	predicate := func() bool { return len(pingQ) == 0 }
@@ -178,7 +178,7 @@ func TestTCPPortCheckMarksNodesHealthyOrUnhealthy(t *testing.T) {
 		}
 	}()
 
-	mockClient := new(mockKongClient)
+	mockClient := new(mockClient)
 
 	pingQ := make(chan target, 4)
 	pingQ <- target{URL: "localhost:3000", Weight: 0, UpstreamID: "upstream1"}
@@ -190,7 +190,7 @@ func TestTCPPortCheckMarksNodesHealthyOrUnhealthy(t *testing.T) {
 	mockClient.On("setTargetWeightFor", "upstream4", "localhost:4000", 0).Return(nil)
 
 	p := pinger{
-		kongClient:      mockClient,
+		client:          mockClient,
 		pingClient:      &http.Client{},
 		pingPath:        *healthCheckPath,
 		workQ:           pingQ,

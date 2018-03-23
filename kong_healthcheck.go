@@ -15,12 +15,12 @@ type kongHealthCheckConfig struct {
 type kongHealthCheck struct {
 	ticker     *time.Ticker
 	targetChan chan target
-	client     KongClient
+	client     Client
 
 	wg sync.WaitGroup
 }
 
-func newKongHealthCheck(targetChan chan target, client KongClient, hcConfig *kongHealthCheckConfig) (*kongHealthCheck, error) {
+func newKongHealthCheck(targetChan chan target, client Client, hcConfig *kongHealthCheckConfig) (*kongHealthCheck, error) {
 	hcInterval, err := strconv.Atoi(hcConfig.healthCheckInterval)
 	if err != nil {
 		return nil, err
