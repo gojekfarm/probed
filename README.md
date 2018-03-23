@@ -26,7 +26,7 @@ go get -u github.com/gojekfarm/probed
 
 ProbeD can be deployed as co process/sidecar with the load balancer (Kong) like following diagram, where it automatically fetch the upstream servers and remove those if health check fails.
 
-<p align="center"><img src="docs/deployment.svg" width="360"></p>
+<p align="center"><img src="docs/deployment.svg" width="480"></p>
 
 ## Configuration
 
