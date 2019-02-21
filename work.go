@@ -6,6 +6,8 @@ import (
 	"log"
 	"net"
 	"net/http"
+
+	"github.com/gojektech/heimdall/httpclient"
 )
 
 const unhealthyNodeWeight = 0
@@ -13,7 +15,7 @@ const healthyNodeWeight = 100
 
 type pinger struct {
 	client          Client
-	pingClient      *http.Client
+	pingClient      *httpclient.Client
 	pingPath        string
 	workQ           chan target
 	healthCheckType string

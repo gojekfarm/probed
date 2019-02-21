@@ -6,17 +6,23 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
+
+	"github.com/gojektech/heimdall/httpclient"
 )
 
 type kongClient struct {
-	httpClient   *http.Client
+	httpClient   *httpclient.Client
 	kongAdminURL string
 }
 
-func newKongClient(kongHost, kongAdminPort string) *kongClient {
+func newKongClient(kongHost, kongAdminPort string, timeout time.Duration) *kongClient {
+	if timeout == 0 {
+		timeout = 1000 * time.Millisecond
+	}
 	return &kongClient{
 		kongAdminURL: fmt.Sprintf("%s:%s", kongHost, kongAdminPort),
-		httpClient:   &http.Client{},
+		httpClient:   httpclient.NewClient(httpclient.WithHTTPTimeout(timeout)),
 	}
 }
 
