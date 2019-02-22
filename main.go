@@ -3,14 +3,16 @@ package main
 import (
 	"flag"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/gojektech/heimdall/httpclient"
 )
 
 var kongHost = flag.String("kong", "", "kong host")
 var kongAdminPort = flag.String("kong-admin-port", "8001", "kong admin port")
+var kongClientTimeout = flag.Duration("kong-client-timeout", 1000, "http client timeout")
 
 var healthCheckInterval = flag.String("health-check-interval", "2000", "health check interval in ms")
 var healthCheckPath = flag.String("health-check-path", "/ping", "path to check for active health check")
@@ -30,11 +32,11 @@ func main() {
 	}
 
 	pingQ := make(chan target, *targetsQLen)
-	client := newKongClient(*kongHost, *kongAdminPort)
+	client := newKongClient(*kongHost, *kongAdminPort, *kongClientTimeout)
 
 	p := pinger{
 		client:          client,
-		pingClient:      &http.Client{},
+		pingClient:      httpclient.NewClient(),
 		pingPath:        *healthCheckPath,
 		workQ:           pingQ,
 		healthCheckType: *healthCheckType,

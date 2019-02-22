@@ -4,13 +4,20 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
+	"github.com/gojektech/heimdall/httpclient"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+var (
+	Timeout    = 1000 * time.Millisecond
+	HTTPClient = httpclient.NewClient()
+)
+
 func TestNewKongClient(t *testing.T) {
-	kclient := newKongClient("127.0.0.1", "9000")
+	kclient := newKongClient("127.0.0.1", "9000", Timeout)
 
 	assert.Equal(t, "127.0.0.1:9000", kclient.kongAdminURL)
 	assert.NotNil(t, kclient.httpClient)
@@ -23,7 +30,7 @@ func TestUpstreamsSuccess(t *testing.T) {
 
 	defer httpServer.Close()
 
-	kclient := &kongClient{httpClient: &http.Client{}, kongAdminURL: httpServer.URL}
+	kclient := &kongClient{httpClient: HTTPClient, kongAdminURL: httpServer.URL}
 	upstreams, err := kclient.upstreams()
 	require.NoError(t, err, "should not have failed to get upstreams")
 
@@ -37,7 +44,7 @@ func TestUpstreamsSuccess(t *testing.T) {
 }
 
 func TestUpstreamFailureInvalidURL(t *testing.T) {
-	kclient := &kongClient{httpClient: &http.Client{}, kongAdminURL: "kgp://foo.com"}
+	kclient := &kongClient{httpClient: HTTPClient, kongAdminURL: "kgp://foo.com"}
 	upstreams, err := kclient.upstreams()
 	require.Error(t, err, "should have failed to get upstreams")
 	assert.Equal(t, 0, len(upstreams))
@@ -50,7 +57,7 @@ func TestUpstreamsFailureUnmarshal(t *testing.T) {
 
 	defer httpServer.Close()
 
-	kclient := &kongClient{httpClient: &http.Client{}, kongAdminURL: httpServer.URL}
+	kclient := &kongClient{httpClient: HTTPClient, kongAdminURL: httpServer.URL}
 	upstreams, err := kclient.upstreams()
 	require.Error(t, err, "should have failed to get upstreams")
 	require.Equal(t, 0, len(upstreams))
@@ -63,7 +70,7 @@ func TestTargetsForSuccess(t *testing.T) {
 
 	defer httpServer.Close()
 
-	kclient := &kongClient{httpClient: &http.Client{}, kongAdminURL: httpServer.URL}
+	kclient := &kongClient{httpClient: HTTPClient, kongAdminURL: httpServer.URL}
 	targets, err := kclient.targetsFor("upstream1")
 	require.NoError(t, err, "should not have failed to get targets")
 
@@ -81,7 +88,7 @@ func TestTargetsForSuccess(t *testing.T) {
 }
 
 func TestTargetsForFailureInvalidURL(t *testing.T) {
-	kclient := &kongClient{httpClient: &http.Client{}, kongAdminURL: "kgp://foo.com"}
+	kclient := &kongClient{httpClient: HTTPClient, kongAdminURL: "kgp://foo.com"}
 	upstreams, err := kclient.targetsFor("upstream1")
 	require.Error(t, err, "should have failed to get upstreams")
 	assert.Equal(t, 0, len(upstreams))
@@ -94,7 +101,7 @@ func TestTargetsForFailureUnmarshal(t *testing.T) {
 
 	defer httpServer.Close()
 
-	kclient := &kongClient{httpClient: &http.Client{}, kongAdminURL: httpServer.URL}
+	kclient := &kongClient{httpClient: HTTPClient, kongAdminURL: httpServer.URL}
 	upstreams, err := kclient.targetsFor("upstream1")
 	require.Error(t, err, "should have failed to get upstreams")
 	require.Equal(t, 0, len(upstreams))
@@ -106,7 +113,7 @@ func TestSetTargetWeightForSuccess(t *testing.T) {
 	}))
 	defer httpServer.Close()
 
-	kclient := &kongClient{httpClient: &http.Client{}, kongAdminURL: httpServer.URL}
+	kclient := &kongClient{httpClient: HTTPClient, kongAdminURL: httpServer.URL}
 	err := kclient.setTargetWeightFor("upstream1", "target1", 100)
 	require.NoError(t, err, "should not have failed to set target weight")
 }
@@ -117,7 +124,7 @@ func TestSetTargetWeightForFailure(t *testing.T) {
 	}))
 	defer httpServer.Close()
 
-	kclient := &kongClient{httpClient: &http.Client{}, kongAdminURL: httpServer.URL}
+	kclient := &kongClient{httpClient: HTTPClient, kongAdminURL: httpServer.URL}
 	err := kclient.setTargetWeightFor("upstream1", "target1", 100)
 	require.Error(t, err, "should have failed to set target weight")
 }
